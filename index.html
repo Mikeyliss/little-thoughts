@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>Little Thoughts</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Little Thoughts">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link id="favicon-link" rel="icon" href="">
+<link id="apple-icon-link" rel="apple-touch-icon" href="">
+<link id="manifest-link" rel="manifest" href="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -674,6 +681,73 @@
     document.documentElement.setAttribute('data-theme', id);
     saveSettings();
     renderSettings();
+    updateAppIcons();
+  }
+
+  /* ---------- APP ICON (favicon / home-screen icon) ---------- */
+  var MOON_PATH = 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z';
+
+  function drawAppIcon(size){
+    var canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    var styles = getComputedStyle(document.documentElement);
+    var bg = styles.getPropertyValue('--card').trim() || '#ffffff';
+    var accent = styles.getPropertyValue('--accent').trim() || '#333333';
+
+    var radius = size * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(radius, 0);
+    ctx.arcTo(size, 0, size, size, radius);
+    ctx.arcTo(size, size, 0, size, radius);
+    ctx.arcTo(0, size, 0, 0, radius);
+    ctx.arcTo(0, 0, size, 0, radius);
+    ctx.closePath();
+    ctx.fillStyle = bg;
+    ctx.fill();
+
+    var pad = size * 0.28;
+    var scale = (size - pad * 2) / 24;
+    ctx.save();
+    ctx.translate(pad, pad);
+    ctx.scale(scale, scale);
+    var moon = new Path2D(MOON_PATH);
+    ctx.lineWidth = 1.5 / scale * (scale > 1 ? 1 : 1);
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = accent;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke(moon);
+    ctx.restore();
+
+    return canvas.toDataURL('image/png');
+  }
+
+  function updateAppIcons(){
+    try {
+      var small = drawAppIcon(64);
+      var touch = drawAppIcon(180);
+      var mid = drawAppIcon(192);
+      var large = drawAppIcon(512);
+
+      document.getElementById('favicon-link').setAttribute('href', small);
+      document.getElementById('apple-icon-link').setAttribute('href', touch);
+
+      var manifest = {
+        name: 'Little Thoughts',
+        short_name: 'Little Thoughts',
+        display: 'standalone',
+        start_url: '.',
+        background_color: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff',
+        theme_color: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff',
+        icons: [
+          { src: mid, sizes: '192x192', type: 'image/png' },
+          { src: large, sizes: '512x512', type: 'image/png' }
+        ]
+      };
+      var manifestUrl = 'data:application/manifest+json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(manifest))));
+      document.getElementById('manifest-link').setAttribute('href', manifestUrl);
+    } catch(e) {}
   }
   function setToggle(key, value){
     settings[key] = value;
@@ -698,6 +772,7 @@
 
   /* init */
   renderHome();
+  updateAppIcons();
 </script>
 </body>
 </html>
